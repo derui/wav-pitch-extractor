@@ -1,0 +1,20 @@
+
+opam-version: "2.0"
+version: "0.1.0"
+maintainer: "derutakayu@gmail.com"
+authors: "derui"
+license: "MIT"
+synopsis: "Extract pitch wave from WAV file"
+homepage: "https://github.com/derui/ocaml-pitch"
+bug-reports: "https://github.com/derui/ocaml-pitch/issues"
+dev-repo: "git+https://github.com/derui/ocaml-pitch.git"
+tags: []
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name] {with-test}
+]
+depends: [
+  "dune" {build & >= "1.11.0"}
+  "alcotest" { with-test & >= "0.8.4" }
+]
+available: ["ocaml" >= "4.07.0"]
