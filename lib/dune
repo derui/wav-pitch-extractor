@@ -1,0 +1,3 @@
+(library
+ (name ocaml_pitch)
+ (public_name ocaml-pitch))
