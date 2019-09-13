@@ -1,3 +1,4 @@
 (library
  (name ocaml_pitch)
- (public_name ocaml-pitch))
+ (public_name ocaml-pitch)
+ (preprocess (pps ppx_let)))
