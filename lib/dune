@@ -1,4 +1,5 @@
 (library
  (name ocaml_pitch)
  (public_name ocaml-pitch)
+ (libraries bigarray)
  (preprocess (pps ppx_let)))
