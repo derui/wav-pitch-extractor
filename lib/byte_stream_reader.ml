@@ -39,6 +39,9 @@ let read_int64 ~bytes ~endian stream =
   | None -> None
   | Some v -> Some (List.map Char.code v |> bytes_to_int64)
 
+let read_int32 ~bytes ~endian stream =
+  match read_int64 ~bytes ~endian stream with None -> None | Some v -> Some (Int64.to_int32 v)
+
 let read_string ~bytes ~endian stream =
   match read_bytes ~bytes ~endian stream with
   | None -> None
