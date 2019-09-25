@@ -10,4 +10,8 @@ let tests =
   [ Alcotest.test_case "should calculate spectral" `Quick (fun () ->
         let spectral = F.fourier sin_wave in
         let spectral = Array.map Complex.norm spectral in
-        Alcotest.(check @@ float 0.00001) "data" spectral.(20) 50.) ]
+        Alcotest.(check @@ float 0.00001) "data" spectral.(20) 50.)
+  ; Alcotest.test_case "should calculate spectral with FFT" `Quick (fun () ->
+        let spectral = F.fft sin_wave |> Array.map Complex.norm
+        and spectral' = F.fourier sin_wave |> Array.map Complex.norm in
+        Alcotest.(check @@ array @@ float 0.00001) "FFT" spectral spectral') ]
