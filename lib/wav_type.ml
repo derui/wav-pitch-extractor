@@ -79,6 +79,22 @@ module Chunk_data = struct
 
   let empty size : t = Bigarray.Array1.create Bigarray.int32 Bigarray.c_layout size
   let set ~pos ~datum array : t = array.{pos} <- datum ; array
+
+  let seconds ~fmt t =
+    let sampling_rate = fmt.Chunk_fmt.sampling_rate in
+    let current_samples = Bigarray.Array1.dim t in
+    current_samples / sampling_rate
+
+  let get_samples_at_sec ~sec ~fmt t =
+    let sampling_rate = fmt.Chunk_fmt.sampling_rate in
+    let start_ = sampling_rate * sec in
+    let end_ = min (sampling_rate * succ sec) (Bigarray.Array1.dim t) in
+    match (start_, end_) with
+    | (_ as s), _ when s >= Bigarray.Array1.dim t -> None
+    | _, _ ->
+        let ary = Bigarray.Array1.sub t start_ end_ in
+        let ary' = Array.make (end_ - start_) Int32.zero |> Array.mapi (fun i _ -> ary.{i}) in
+        Some ary'
 end
 
 type t =
