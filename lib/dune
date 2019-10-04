@@ -1,5 +1,5 @@
 (library
- (name ocaml_pitch)
- (public_name ocaml-pitch)
+ (name wav_pitch_extractor)
+ (public_name wav-pitch-extractor)
  (libraries bigarray)
  (preprocess (pps ppx_let)))

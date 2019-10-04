@@ -1,4 +1,4 @@
-module F = Ocaml_pitch.Fourier
+module F = Wav_pitch_extractor.Fourier
 
 let sin_wave n =
   let radian = Float.pi *. 2. in

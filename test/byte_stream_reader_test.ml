@@ -1,4 +1,4 @@
-module R = Ocaml_pitch.Byte_stream_reader
+module R = Wav_pitch_extractor.Byte_stream_reader
 
 let stream () = Stream.of_bytes @@ Bytes.of_string "\x00\x01\x02\x03"
 let string_stream () = Stream.of_bytes @@ Bytes.of_string "abcd"
