@@ -1,4 +1,4 @@
-let fourier (data : float array) =
+let dft (data : float array) =
   let size = Array.length data in
   let radian = 2. *. Float.pi /. float_of_int size in
   Array.mapi
@@ -30,8 +30,6 @@ let loop s e ~f =
   in
   loop' s
 
-let to_s {Complex.re; im} = Printf.sprintf "{%f, %f}" re im
-
 let fft_2_power (data : Complex.t array) =
   let q = 2 in
   let rec fft' data n stride =
@@ -61,20 +59,6 @@ let ifft_2_power (data : Complex.t array) =
   Array.map (Complex.mul coefficient) data'
 
 let fft (data : float array) =
-  (* make array that has size to align 2-exponential it *)
-  let ( ** ) v e =
-    let rec loop ret count = if count = 0 then ret else loop (ret * v) (pred count) in
-    loop 1 e
-  in
-  let data_size = Array.length data in
-  let size_fixed_data =
-    least_exponent_of_2 data_size |> ( ** ) 2 |> Array.make |> fun init -> init Complex.zero
-  in
-  Array.iteri (fun i v -> size_fixed_data.(i) <- Complex.{re = v; im = 0.}) data ;
-  let result = fft_2_power size_fixed_data in
-  Array.sub result 0 data_size
-
-let fft_bluestein (data : float array) =
   (* make array that has size to align 2-exponential it *)
   let ( ** ) v e =
     let rec loop ret count = if count = 0 then ret else loop (ret * v) (pred count) in
