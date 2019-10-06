@@ -1,4 +1,4 @@
 (executable
  (name read_wav)
- (public_name ocaml-pitch)
- (libraries ocaml-pitch))
+ (public_name wav-pitch-extractor)
+ (libraries wav-pitch-extractor))
