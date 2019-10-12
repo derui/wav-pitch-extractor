@@ -160,5 +160,4 @@ let detect_pitch_in ~data ~second =
         max_hz := v )
       else ())
     data ;
-  Printf.printf "max index %d %f\n" !max_hz_index (float_of_int !max_hz_index /. second) ;
   float_of_int !max_hz_index /. second
