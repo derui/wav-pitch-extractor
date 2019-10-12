@@ -37,9 +37,7 @@ let write_data_file ~fname (t : Wav_type.t) =
           List.iteri
             (fun i data -> output_string out Printf.(sprintf "%d.%d\t%f\n" second i data))
             arrays ;
-          (* Array.iteri
-           *   (fun i data -> output_string out Printf.(sprintf "%d\t%f\n" (total_samples + i) data))
-           *   data ; *)
+          Printf.printf "second: %d/%d %f\n%!" second seconds (Sys.time ()) ;
           loop (succ second) (total_samples + Array.length data)
   in
   loop 0 0 ; close_out out

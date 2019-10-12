@@ -1,4 +1,4 @@
 (executable
- (name read_wav)
+ (name read_pitch)
  (public_name wav-pitch-extractor)
  (libraries wav-pitch-extractor))
