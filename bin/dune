@@ -1,4 +1,5 @@
 (executable
  (name read_pitch)
  (public_name wav-pitch-extractor)
- (libraries wav-pitch-extractor))
+ (libraries wav-pitch-extractor)
+ (preprocess (pps ppx_let)))
