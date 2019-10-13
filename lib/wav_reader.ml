@@ -6,9 +6,7 @@ type reading_data =
   ; data : Wav_type.Chunk_data.t option }
 
 module Let_syntax = struct
-  let return v = Ok v
   let bind v ~f = match v with Error _ as e -> e | Ok v -> f v
-  let map v ~f = match v with Error _ as e -> e | Ok v -> Ok (f v)
 end
 
 let riff_header stream =
@@ -79,24 +77,20 @@ let read_fmt_chunk stream =
       ; bits_per_sample = Int64.to_int bits_per_sample
       ; extension = (match extension with Ok v -> Some v | Error _ -> None) }
 
-let read_data_chunk stream sample_size =
-  let rec read_data rest_size pos array =
-    let open Wav_type in
-    if Int64.(rest_size = zero) then array
-    else
-      match R.read_int32 ~bytes:sample_size ~endian:`Little stream with
-      | Some v ->
-          read_data
-            Int64.(sub rest_size (of_int sample_size))
-            (succ pos)
-            (Chunk_data.set ~pos ~datum:v array)
-      | None -> array
-  in
+let read_data_chunk stream sample_size channels =
   let%bind size = chunk_size stream in
-  let samples = Int64.(div size (of_int sample_size)) in
-  let data = Wav_type.Chunk_data.empty Int64.(to_int samples) in
-  let data = read_data size 0 data in
-  Ok data
+  let byte_per_sample = sample_size * channels in
+  let rec drop_stream n =
+    if n <= Int64.zero then ()
+    else (
+      Stream.junk stream ;
+      drop_stream Int64.(pred n) )
+  in
+  let initial_position = Stream.count stream in
+  drop_stream Int64.(mul size @@ Int64.of_int byte_per_sample) ;
+  Ok
+    { Wav_type.Chunk_data.total_samples = Int64.(div size @@ of_int (channels * sample_size))
+    ; initial_position }
 
 let rec read_chunk reading stream =
   match R.read_string ~bytes:4 ~endian:`Big stream with
@@ -107,7 +101,9 @@ let rec read_chunk reading stream =
     match reading.fmt with
     | Some fmt ->
         let bits_per_sample = Wav_type.Chunk_fmt.real_bits_per_sample fmt in
-        let%bind data = read_data_chunk stream (bits_per_sample / 8) in
+        let%bind data =
+          read_data_chunk stream (bits_per_sample / 8) (Wav_type.Channels.to_int fmt.channels)
+        in
         read_chunk {reading with data = Some data} stream
     | None -> Error "data chunk must locate after fmt chunk" )
   | Some _ -> (
@@ -118,16 +114,28 @@ let rec read_chunk reading stream =
     | None -> Error "Can not junk unused chunk" )
   | None -> Ok reading
 
-module Make (St : Byte_streamer) : Wav_reader with type t = St.t = struct
-  type t = St.t
+type t =
+  { mutable close : unit -> unit
+  ; stream : Reader_type.byte_stream }
 
-  let read t =
-    let%bind stream = St.from t in
-    let%bind () = riff_header stream in
-    let%bind _ = chunk_size stream in
-    let%bind () = wave_header stream in
-    let%bind reading = read_chunk {fmt = None; data = None} stream in
+type origin = string
+
+let open_origin origin =
+  try
+    let chan = open_in origin in
+    Ok {close = (fun () -> close_in chan); stream = Stream.of_channel chan}
+  with e -> Error (Printexc.to_string e)
+
+let read t =
+  try
+    let%bind () = riff_header t.stream in
+    let%bind _ = chunk_size t.stream in
+    let%bind () = wave_header t.stream in
+    let%bind reading = read_chunk {fmt = None; data = None} t.stream in
+    t.close () ;
     match reading with
     | {fmt = None; _} | {data = None; _} -> Error "Illegal WAVE format"
     | {fmt = Some fmt; data = Some data} -> Ok Wav_type.{chunk_fmt = fmt; data}
-end
+  with e -> t.close () ; raise e
+
+let close t = t.close ()

@@ -23,6 +23,7 @@ module Channels = struct
     | Unknown of int
 
   let of_int = function 1 -> Monaural | 2 -> Stereo | _ as v -> Unknown v
+  let to_int = function Monaural -> 1 | Stereo -> 2 | Unknown v -> v
 
   let to_string = function
     | Monaural -> "Monaural"
@@ -74,27 +75,24 @@ module Chunk_fmt = struct
 end
 
 module Chunk_data = struct
-  type t = (int32, Bigarray.int32_elt, Bigarray.c_layout) Bigarray.Array1.t
+  type t =
+    { total_samples : int64  (** total number of samples in Raw data *)
+    ; initial_position : int }
+end
+
+module Sample = struct
+  type t = int32 array
   (** WAV data *)
 
-  let empty size : t = Bigarray.Array1.create Bigarray.int32 Bigarray.c_layout size
-  let set ~pos ~datum array : t = array.{pos} <- datum ; array
-
-  let seconds ~fmt t =
-    let sampling_rate = fmt.Chunk_fmt.sampling_rate in
-    let current_samples = Bigarray.Array1.dim t in
-    current_samples / sampling_rate
-
-  let get_samples_at_sec ~sec ~fmt t =
-    let sampling_rate = fmt.Chunk_fmt.sampling_rate in
-    let start_ = sampling_rate * sec in
-    if start_ >= Bigarray.Array1.dim t then None
-    else
-      let ary' = Array.init sampling_rate (fun i -> t.{start_ + i}) in
-      Some ary'
+  let make size = Array.make size Int32.zero
 end
 
 type t =
   { chunk_fmt : Chunk_fmt.t
   ; data : Chunk_data.t }
 (** WAV format type. This type has only required value in WAV format *)
+
+let seconds t =
+  let sampling_rate = t.chunk_fmt.Chunk_fmt.sampling_rate in
+  let current_samples = Int64.to_int t.data.total_samples in
+  current_samples / sampling_rate
