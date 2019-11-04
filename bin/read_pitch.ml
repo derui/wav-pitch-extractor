@@ -7,7 +7,7 @@ let split_array ary num =
 let pitch_to_data_point ~sec ~msec ~pitch = Printf.sprintf "%d.%d\t%f\n" sec msec pitch
 
 let data_to_fixed_hz data =
-  let data = Fourier.fft @@ Array.map Int32.to_float data |> Array.map Complex.norm in
+  let data = Fourier.fft_float @@ Array.map Int32.to_float data |> Array.map Complex.norm in
   let data = Array.sub data 0 (Array.length data / 2) in
   data.(0) <- 0. ; data
 

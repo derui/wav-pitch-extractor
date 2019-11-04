@@ -56,9 +56,9 @@ let ifft_2_power (data : Complex.t array) =
   let data' = Array.map Complex.conj data in
   let data' = fft_2_power data' in
   let coefficient = {Complex.re = 1. /. (float_of_int @@ Array.length data); im = 0.} in
-  Array.map (Complex.mul coefficient) data'
+  Array.map (fun v -> Complex.mul coefficient @@ Complex.conj v) data'
 
-let fft (data : float array) =
+let fft_general ~converter data =
   (* make array that has size to align 2-exponential it *)
   let ( ** ) v e =
     let rec loop ret count = if count = 0 then ret else loop (ret * v) (pred count) in
@@ -74,7 +74,7 @@ let fft (data : float array) =
     Array.init padded_size
     @@ fun i ->
     if i < data_size then
-      let v = {Complex.re = data.(i); im = 0.} in
+      let v = converter data.(i) in
       let i = omega (-1 * (i ** 2)) data_size in
       Complex.mul v i
     else Complex.zero
@@ -92,3 +92,12 @@ let fft (data : float array) =
       let omega = b.(i) in
       let r' = r.(i) in
       Complex.mul omega r')
+
+let fft = fft_general ~converter:(fun v -> v)
+let fft_float = fft_general ~converter:(fun v -> {Complex.re = v; im = 0.})
+
+let ifft data =
+  let data' = Array.map Complex.conj data in
+  let data' = fft data' in
+  let coefficient = {Complex.re = 1. /. (float_of_int @@ Array.length data); im = 0.} in
+  Array.map (fun v -> Complex.mul coefficient @@ Complex.conj v) data'
