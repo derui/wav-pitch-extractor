@@ -4,6 +4,13 @@ let split_array ary num =
   let len_child_array = Array.length ary / num in
   List.init num (fun i -> Array.sub ary (i * len_child_array) len_child_array)
 
+let pitch_to_data_point ~sec ~msec ~pitch = Printf.sprintf "%d.%d\t%f\n" sec msec pitch
+
+let data_to_fixed_hz data =
+  let data = Fourier.fft @@ Array.map Int32.to_float data |> Array.map Complex.norm in
+  let data = Array.sub data 0 (Array.length data / 2) in
+  data.(0) <- 0. ; data
+
 let write_data_file ~fname ~origin (t : Wav_type.t) =
   let seconds = Wav_type.seconds t in
   match Wav_data_reader.open_origin (origin, t) with
@@ -19,15 +26,11 @@ let write_data_file ~fname ~origin (t : Wav_type.t) =
               let arrays =
                 split_array data 10
                 |> List.map (fun data ->
-                       let data =
-                         Fourier.fft @@ Array.map Int32.to_float data |> Array.map Complex.norm
-                       in
-                       let data = Array.sub data 0 (Array.length data / 2) in
-                       data.(0) <- 0. ; data)
-                |> List.map (fun data -> Pitch.detect_pitch_in ~data ~second:0.1)
+                       data_to_fixed_hz data |> fun data -> Pitch.detect_pitch_in ~second:0.1 ~data)
               in
               List.iteri
-                (fun i data -> output_string out Printf.(sprintf "%d.%d\t%f\n" second i data))
+                (fun i pitch ->
+                  output_string out @@ pitch_to_data_point ~sec:second ~msec:i ~pitch)
                 arrays ;
               Printf.printf "second: %d/%d %f\n%!" (succ second) seconds (Sys.time ()) ;
               loop (succ second)

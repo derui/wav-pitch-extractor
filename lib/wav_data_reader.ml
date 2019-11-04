@@ -47,7 +47,6 @@ let read ~sec ?(channel : [`Merged | `Channel of int] = `Merged) t =
   let channels = Wav_type.Channels.to_int t.wav.chunk_fmt.channels in
   let data_size = Int64.(mul t.wav.data.total_samples @@ of_int channels) in
   let data_pos = sec * t.wav.chunk_fmt.sampling_rate * channels in
-  Printf.printf "total samples %Ld, data_pos %d\n" t.wav.data.total_samples data_pos ;
   if data_size <= Int64.of_int data_pos then Error "can not read"
   else (
     seek_in t.chan (t.wav.data.initial_position + data_pos) ;
