@@ -75,7 +75,6 @@ let fft_general ~converter data =
   in
   let data_size = Array.length data in
   let padded_size = 2 ** least_exponent_of_2 ((data_size * 2) - 1) in
-  Printf.printf "original = %d, padded = %d\n" data_size padded_size;
   let omega i n =
     Complex.exp { Complex.re = 0.; im = -2. *. Float.pi *. float_of_int i /. float_of_int n }
   in
