@@ -6,10 +6,10 @@ let sin_wave n =
       (sin @@ (10. *. radian *. float_of_int v *. 0.01))
       +. (sin @@ (radian *. 20. *. float_of_int v *. 0.01)))
 
-let single_sin_wave freq n =
+let single_sin_wave ?(len = 0.) freq n =
   let n' = float_of_int n in
   let radian = Float.pi *. 2. *. float_of_int freq /. n' in
-  Array.init n (fun v -> Complex.exp { Complex.re = 0.; im = radian *. float_of_int v })
+  Array.init n (fun v -> Complex.exp { Complex.re = len; im = radian *. float_of_int v })
 
 let tests =
   [
@@ -28,7 +28,7 @@ let tests =
         Alcotest.(check @@ array @@ float 0.00001) "FFT with DFT" spectral spectral');
     Alcotest.test_case "should calculate via IFFT " `Quick (fun () ->
         let spectral =
-          single_sin_wave 10 128 |> F.fft |> F.ifft |> Array.map (fun v -> Complex.norm v)
-        and spectral' = single_sin_wave 10 128 |> Array.map (fun v -> Complex.norm v) in
+          single_sin_wave ~len:1. 10 128 |> F.fft |> F.ifft |> Array.map (fun v -> Complex.norm v)
+        and spectral' = single_sin_wave ~len:1. 10 128 |> Array.map (fun v -> Complex.norm v) in
         Alcotest.(check @@ array @@ float 0.00001) "IFFT" spectral' spectral);
   ]

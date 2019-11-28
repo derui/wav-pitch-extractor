@@ -109,13 +109,8 @@ let detect_pitch_in ~data ~frame_size =
   let peaks_val = ref [] in
 
   loop_range 2 (Array.length data) ~f:(fun i ->
-      if data.(i - 1) -. data.(i - 2) >= 0. && data.(i) -. data.(i - 1) < 0. then (
-        Printf.printf "%d: %f, %d: %f, %d: %f\n" (i - 2)
-          data.(i - 2)
-          (i - 1)
-          data.(i - 1)
-          i data.(i);
-        peaks_val := (data.(i - 1), i - 1) :: !peaks_val )
+      if data.(i - 1) -. data.(i - 2) >= 0. && data.(i) -. data.(i - 1) < 0. then
+        peaks_val := (data.(i - 1), i - 1) :: !peaks_val
       else ());
 
   let lists = List.sort (fun (v1, _) (v2, _) -> compare v1 v2) !peaks_val |> List.rev in
