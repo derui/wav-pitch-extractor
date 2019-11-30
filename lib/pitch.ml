@@ -114,8 +114,4 @@ let detect_pitch_in ~data ~frame_size =
       else ());
 
   let lists = List.sort (fun (v1, _) (v2, _) -> compare v1 v2) !peaks_val |> List.rev in
-  match lists with
-  | [] -> 0.
-  | (_, hz) :: _ ->
-      Printf.printf "hz => %d, pitch => %f\n" hz (frame_size /. float_of_int hz);
-      frame_size /. float_of_int hz
+  match lists with [] -> 0. | (_, hz) :: _ -> frame_size /. float_of_int hz

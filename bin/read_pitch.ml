@@ -8,9 +8,9 @@ let pitch_to_data_point ~sec ~msec ~pitch = Printf.sprintf "%d.%d\t%f\n" sec mse
 
 let data_to_acf data =
   let data = Fourier.fft_float @@ Array.map Int32.to_float data in
+  data.(0) <- Complex.zero;
   let data =
-    data |> Array.map Complex.norm
-    |> Array.map (fun v -> v ** 2.)
+    data |> Array.map Complex.norm2
     |> Array.map (fun v -> Complex.{ re = v; im = 0. })
     |> Fourier.ifft
   in

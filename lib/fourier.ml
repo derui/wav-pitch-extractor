@@ -34,10 +34,8 @@ let dft_float (data : float array) =
     data
 
 let least_exponent_of_2 n =
-  let rec loop n accum =
-    if n = 0 then accum else if n <= 2 then succ accum else loop (n / 2) (succ accum)
-  in
-  loop n 0
+  let rec loop n accum = if n <= accum then accum else loop n (accum * 2) in
+  loop n 1
 
 let fft_2_power (data : Complex.t array) =
   let q = 2 in
@@ -64,8 +62,12 @@ let fft_2_power (data : Complex.t array) =
 let ifft_2_power (data : Complex.t array) =
   let data' = Array.map Complex.conj data in
   let data' = fft_2_power data' in
-  let coefficient = { Complex.re = 1. /. (float_of_int @@ Array.length data); im = 0. } in
-  Array.map (fun v -> Complex.mul coefficient @@ Complex.conj v) data'
+  let coefficient = 1. /. (float_of_int @@ Array.length data) in
+  Array.map
+    (fun v ->
+      let c = Complex.conj v in
+      { Complex.re = c.re *. coefficient; im = c.im *. coefficient })
+    data'
 
 let fft_general ~converter data =
   (* make array that has size to align 2-exponential it *)
@@ -74,35 +76,40 @@ let fft_general ~converter data =
     loop 1 e
   in
   let data_size = Array.length data in
-  let padded_size = 2 ** least_exponent_of_2 ((data_size * 2) - 1) in
-  let omega i n =
-    Complex.exp { Complex.re = 0.; im = -2. *. Float.pi *. float_of_int i /. float_of_int n }
+  let padded_size = least_exponent_of_2 ((data_size * 2) - 1) in
+  let chirp =
+    Array.mapi
+      (fun i _ ->
+        Complex.exp
+          {
+            Complex.re = 0.;
+            im = -1. *. Float.pi *. float_of_int (i ** 2) /. float_of_int data_size;
+          })
+      data
   in
   let a =
     Array.init padded_size @@ fun i ->
     if i < data_size then
       let v = converter data.(i) in
-      let i = omega (i ** 2) (2 * data_size) in
-      Complex.mul v i
+      Complex.mul v chirp.(i)
     else Complex.zero
   in
   let b =
     Array.init padded_size @@ fun i ->
-    if i < data_size then omega (-1 * (i ** 2)) (2 * data_size)
+    if i < data_size then Complex.conj chirp.(i)
     else if data_size <= i && i <= padded_size - data_size then Complex.zero
-    else omega (-1 * ((padded_size - i) ** 2)) (2 * data_size)
+    else Complex.conj chirp.(padded_size - i)
   in
   let a' = fft_2_power a and b' = fft_2_power b in
   let r = Array.init padded_size (fun i -> Complex.mul a'.(i) b'.(i)) |> ifft_2_power in
-  Array.init data_size (fun i ->
-      let omega = b.(i) in
-      let r = r.(i) in
-      Complex.mul omega r)
+  Array.init data_size (fun i -> Complex.mul r.(i) chirp.(i))
 
 let fft = fft_general ~converter:(fun v -> v)
 let fft_float = fft_general ~converter:(fun v -> { Complex.re = v; im = 0. })
 
 let ifft data =
-  let coefficient = { Complex.re = 1. /. (float_of_int @@ Array.length data); im = 0. } in
+  let coefficient = 1. /. (float_of_int @@ Array.length data) in
   Array.map Complex.conj data |> fft
-  |> Array.map (fun v -> Complex.mul coefficient @@ Complex.conj v)
+  |> Array.map (fun v ->
+         let c = Complex.conj v in
+         { Complex.re = c.re *. coefficient; im = c.im *. coefficient })

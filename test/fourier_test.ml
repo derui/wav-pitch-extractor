@@ -21,14 +21,14 @@ let tests =
     Alcotest.test_case "should calculate spectral with FFT odd samples" `Quick (fun () ->
         let spectral = sin_wave 101 |> F.fft_float |> Array.map Complex.norm
         and spectral' = sin_wave 101 |> F.dft_float |> Array.map Complex.norm in
-        Alcotest.(check @@ array @@ float 0.00001) "FFT with DFT in odd" spectral spectral');
+        Alcotest.(check @@ array @@ float 0.00001) "FFT with DFT in odd" spectral' spectral);
     Alcotest.test_case "should calculate spectral with FFT " `Quick (fun () ->
         let spectral = sin_wave 128 |> F.fft_float |> Array.map Complex.norm
         and spectral' = sin_wave 128 |> F.dft_float |> Array.map Complex.norm in
-        Alcotest.(check @@ array @@ float 0.00001) "FFT with DFT" spectral spectral');
+        Alcotest.(check @@ array @@ float 0.00001) "FFT with DFT" spectral' spectral);
     Alcotest.test_case "should calculate via IFFT " `Quick (fun () ->
         let spectral =
-          single_sin_wave ~len:1. 10 128 |> F.fft |> F.ifft |> Array.map (fun v -> Complex.norm v)
-        and spectral' = single_sin_wave ~len:1. 10 128 |> Array.map (fun v -> Complex.norm v) in
+          single_sin_wave ~len:1. 10 150 |> F.fft |> F.ifft |> Array.map (fun v -> Complex.norm v)
+        and spectral' = single_sin_wave ~len:1. 10 150 |> Array.map (fun v -> Complex.norm v) in
         Alcotest.(check @@ array @@ float 0.00001) "IFFT" spectral' spectral);
   ]
